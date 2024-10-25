@@ -56,7 +56,7 @@ uint8_t currentCharge(float voltage)
 {
   if ( voltage >= 4.20 ) { return 100; }
   else if ( voltage >= 4.15 ) { return 95; }
-  else if ( voltage >= 4.15 ) { return 90; }
+  else if ( voltage >= 4.11 ) { return 90; }
   else if ( voltage >= 4.08 ) { return 85; }
   else if ( voltage >= 4.02 ) { return 80; }
   else if ( voltage >= 3.98 ) { return 75; }
