@@ -12,6 +12,8 @@
 #include "Animations/Hypno.h"
 #include "Animations/Sparkle.h"
 
+#define DEBUG 1
+
 #define LEFT_EAR_PIN D4
 #define RIGHT_EAR_PIN D5
 #define BUTTON_PIN D7
@@ -31,9 +33,12 @@
 #define ANIMATION_INTERVAL 1000
 #define ANIMATION_FADE_DURATION 1
 
+#ifdef DEBUG
+  #undef VOLTAGE_CUTOFF
+  #define VOLTAGE_CUTOFF 0
+#endif
+
 Animation* gAnimations[] = {
-  new Hypno(),
-  new Charge(),
   new Hypno(),
   new Sparkle(false),
   new Chase(),
@@ -52,7 +57,6 @@ ezButton gButton(BUTTON_PIN);
 
 RunningMedian gVoltageSamples = RunningMedian(16);
 
-
 // Courtesy of https://github.com/G6EJD/LiPo_Battery_Capacity_Estimator
 uint8_t currentCharge(float voltage)
 {
@@ -63,25 +67,44 @@ uint8_t currentCharge(float voltage)
                    650767.4615 * voltage + 626532.5703);
 }
 
+// Once we enter voltageCutoff, we stay here for safety until the controller is reset
+void voltageCutoff()
+{
+  if ( gVoltageSamples.getMedian() >= VOLTAGE_CUTOFF ) {
+    return;
+  }
+
+  #ifdef DEBUG
+    Serial.println("Triggered voltage cutoff");
+  #endif 
+
+  FastLED.clear();
+  FastLED.show();
+
+  uint8_t ledState = 1;
+
+  while ( true ) {
+    delay(1000);
+    ledState = (ledState + 1) & 1;
+    (gLeds.leftLeds)[0] = CRGB(ledState,0,0);
+  }
+}
+
+
 void setup()
 {
   Serial.begin(115200);
 	while (!Serial && millis() < 2000);
 
-  // Prime the voltage monitor
-  pinMode(VOLTAGE_PIN, INPUT);
-  for( uint8_t i = 0; i < 16; i++) {
-    float reading = 2 * analogReadMilliVolts(VOLTAGE_PIN) / 1000.0; // attenuation ratio 1/2, mV --> V
-    gVoltageSamples.add(reading); 
-  }
-
-  // Immediately enter the safety cutoff if we are low voltage
-  if ( gVoltageSamples.getMedian() < VOLTAGE_CUTOFF ) {}
+  #ifdef DEBUG
+    delay(2000); // failsafe to avoid bricking controller
+  #endif
 
   // Initialize the FastLED configuration
   FastLED.setMaxPowerInMilliWatts(MAX_POWER_IN_MW);
   FastLED.setBrightness(MAX_BRIGHTNESS);
 
+  // Initialize the FastLED pixel data
   gLeds.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
   gLeds.leftLeds = new CRGBSet(gLeds.rawLeftLeds, NUM_LEDS_PER_EAR);
   gLeds.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
@@ -89,6 +112,7 @@ void setup()
   gLeds.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
   gLeds.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
 
+  // Initialize the buffer for transitioning between two animations
   gFadeBuffer.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
   gFadeBuffer.leftLeds = new CRGBSet(gFadeBuffer.rawLeftLeds, NUM_LEDS_PER_EAR);
   gFadeBuffer.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
@@ -96,6 +120,7 @@ void setup()
   gFadeBuffer.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
   gFadeBuffer.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
 
+  // Define CRGBSets for each individual LED ring to simplify certain animations
   uint8_t led_index = 0;
   for( uint8_t ring = 0; ring < NUM_RINGS; ring++ ) {
     gLeds.leftRings[ring] = new CRGBSet(*(gLeds.leftLeds), led_index, led_index+RING_SIZE[ring]-1);
@@ -113,31 +138,33 @@ void setup()
 
   gButton.setDebounceTime(50);
 
+  // Prime the voltage monitor and immediately enter the safety cuffoff if we are low volage
+  pinMode(VOLTAGE_PIN, INPUT);
+  for( uint8_t i = 0; i < 16; i++) {
+    float reading = 2 * analogReadMilliVolts(VOLTAGE_PIN) / 1000.0; // attenuation ratio 1/2, mV --> V
+    gVoltageSamples.add(reading); 
+  }
+  voltageCutoff();
+
   gAnimations[gCurrentAnimation]->Setup();
 }
 
 void loop()
 {
-  // Sample the battery voltage twice per second
-  EVERY_N_MILLISECONDS(500) {
+  // Sample the battery voltage 10 times per second and enter the safety cutoff if we are low voltage
+  EVERY_N_MILLISECONDS(100) {
     float reading = 2 * analogReadMilliVolts(VOLTAGE_PIN) / 1000.0; // attenuation ratio 1/2, mV --> V
     gVoltageSamples.add(reading);
+    voltageCutoff();
   }
 
-  // Immediately enter the safety cutoff if we are low voltage
-  if ( gVoltageSamples.getMedian() < VOLTAGE_CUTOFF ) {}
-
+  // Use the button to trigger animation rotation
   gButton.loop();
   if ( gButton.isPressed() ) {
     gNextAnimation = (gCurrentAnimation + 1) % ARRAY_SIZE(gAnimations);
     gAnimations[gNextAnimation]->Setup();
     gCurrentAnimation = gNextAnimation;
     gInTransition = 0;
-    Serial.println("click");
-  }
-
-  EVERY_N_SECONDS(5) {
-    Serial.printf("a:%0.3f m:%0.3f %d%%\n", gVoltageSamples.getAverage(), gVoltageSamples.getMedian(), currentCharge(gVoltageSamples.getMedian()));
   }
   
   /*
@@ -163,6 +190,7 @@ void loop()
     } 
   }
 
+  // Render a frame of the current animation
   gAnimations[gCurrentAnimation]->Loop(&gLeds);
 
   if ( gInTransition ) {
@@ -173,10 +201,11 @@ void loop()
 
   FastLED.show();
 
-  /*                                              
-  EVERY_N_MILLISECONDS(1000) {
-    Serial && Serial.printf("FPS: %d\n", FastLED.getFPS());
-  }
-  */
+  #ifdef DEBUG                                             
+    EVERY_N_MILLISECONDS(1000) {
+      Serial.printf("FPS: %d\n", FastLED.getFPS());
+      Serial.printf("a:%0.3f m:%0.3f %d%%\n", gVoltageSamples.getAverage(), gVoltageSamples.getMedian(), currentCharge(gVoltageSamples.getMedian()));
+    }
+  #endif
 
 }
