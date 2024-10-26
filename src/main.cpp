@@ -52,29 +52,15 @@ ezButton gButton(BUTTON_PIN);
 
 RunningMedian gVoltageSamples = RunningMedian(16);
 
+
+// Courtesy of https://github.com/G6EJD/LiPo_Battery_Capacity_Estimator
 uint8_t currentCharge(float voltage)
 {
-  if ( voltage >= 4.20 ) { return 100; }
-  else if ( voltage >= 4.15 ) { return 95; }
-  else if ( voltage >= 4.11 ) { return 90; }
-  else if ( voltage >= 4.08 ) { return 85; }
-  else if ( voltage >= 4.02 ) { return 80; }
-  else if ( voltage >= 3.98 ) { return 75; }
-  else if ( voltage >= 3.95 ) { return 70; }
-  else if ( voltage >= 3.91 ) { return 65; }
-  else if ( voltage >= 3.87 ) { return 60; }
-  else if ( voltage >= 3.85 ) { return 55; }
-  else if ( voltage >= 3.84 ) { return 50; }
-  else if ( voltage >= 3.82 ) { return 45; }
-  else if ( voltage >= 3.80 ) { return 40; }
-  else if ( voltage >= 3.79 ) { return 35; }
-  else if ( voltage >= 3.77 ) { return 30; }
-  else if ( voltage >= 3.75 ) { return 25; }
-  else if ( voltage >= 3.73 ) { return 20; }
-  else if ( voltage >= 3.71 ) { return 15; }
-  else if ( voltage >= 3.69 ) { return 10; }
-  else if ( voltage >= 3.61 ) { return 5; }
-  return 0;
+  if ( voltage < 3.5 ) { return 0; }
+  return (uint8_t)(2808.3808 * pow(voltage, 4) - 
+                   43560.9157 * pow(voltage, 3) +
+                   252848.5888 * pow(voltage, 2) -
+                   650767.4615 * voltage + 626532.5703);
 }
 
 void setup()
