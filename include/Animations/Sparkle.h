@@ -1,12 +1,16 @@
 #include "Animation.h"
 
+#ifndef Sparkle_h
+#define Sparkle_h
+
 class Sparkle : public Animation
 {
     public:
         
-        Sparkle(const bool rainbow = false) :
+        Sparkle(const bool rainbow, const CHSV color = CHSV(0,0,255)) :
             Animation(),
-            rainbow(rainbow)
+            rainbow(rainbow),
+            color(color)
         {
         }
 
@@ -20,10 +24,17 @@ class Sparkle : public Animation
         {
             unsigned long now = millis();
 
-            if ( now - this->spawnTimer > 20 ) {
+            if ( now - this->spawnTimer > 30 ) {
+                CHSV color;
                 this->spawnTimer = now;
-		        (*data->leftLeds)[random(0, data->leftLeds->size())] = ( this->rainbow ? CHSV(random(0,255), 255, 255) : CHSV(0,0,255) );
-		        (*data->rightLeds)[random(0, data->rightLeds->size())] = ( this->rainbow ? CHSV(random(0,255), 255, 255) : CHSV(0,0,255) );
+
+                color = ( this->rainbow ? CHSV(random(0,255), 255, 255) : this->color );
+                color.v = scale8_video(color.v, 192);
+		        (*data->leftLeds)[random(0, data->leftLeds->size())] = color;
+                
+                color = ( this->rainbow ? CHSV(random(0,255), 255, 255) : this->color );
+                color.v = scale8_video(color.v, 192);
+		        (*data->rightLeds)[random(0, data->rightLeds->size())] = color;
             }
 
             if ( now - this->fadeTimer > 10 ) {
@@ -38,5 +49,8 @@ class Sparkle : public Animation
         unsigned long fadeTimer = 0;
 
         const bool rainbow;
+        const CHSV color;
 
 };
+
+#endif
