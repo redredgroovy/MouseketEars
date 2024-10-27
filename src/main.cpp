@@ -8,63 +8,67 @@
 
 #include "Animation.h"
 #include "Animations/Acid.h"
+#include "Animations/Charge.h"
+#include "Animations/Cycle.h"
 #include "Animations/Fuego.h"
 #include "Animations/Hypno.h"
 #include "Animations/Sparkle.h"
 #include "Animations/TwinkleFOX.h"
 
-#define DEBUG 1
+#undef DEBUG
 
 #define LEFT_EAR_PIN D5
 #define RIGHT_EAR_PIN D4
 #define BUTTON_PIN D7
 #define VOLTAGE_PIN A0
 
-#define VOLTAGE_CUTOFF 3.4
+#define VOLTAGE_CUTOFF 3.5
 
 #define CHIPSET WS2812B
 #define PIXEL_ORDER GRB
 #define MAX_POWER_IN_MW 1000
 #define MAX_BRIGHTNESS 32
 
-
-
-#define ANIMATION_INTERVAL 5
-#define ANIMATION_FADE_DURATION 1000
-
 #ifdef DEBUG
   #undef VOLTAGE_CUTOFF
   #define VOLTAGE_CUTOFF 0
 #endif
 
+LedData gLeds;
+LedData gFadeBuffer;
+
 Animation* gAnimations[] = {
-  new TwinkleFOX(Ice_p),
+  new Cycle(&gFadeBuffer),
 
   new Acid(LavaColors_p, 128),
   new Acid(OceanColors_p, 128),
   new Acid(PoisonGreen_p),
+  
   new Fuego(FireOrange_h),
-  new Sparkle(false, Gold_h),
-  new TwinkleFOX(FairyLight_p, 128),
-
   new Fuego(PoisonGreen_h),
+  new Fuego(IceBlue_h),
+    
+  new Sparkle(false, Gold_h),
   new Sparkle(false, CHSV(0,0,255)),
+  new Sparkle(true),
+  
+  new TwinkleFOX(FairyLight_p, 128),
+  new TwinkleFOX(Ice_p),
   new TwinkleFOX(Snow_p),
 
-  new Fuego(IceBlue_h),
-  new Sparkle(true),
   new Hypno(192),
+
+  new Charge(),
 };
 
 uint8_t gCurrentAnimation = 0;
+/*
 uint8_t gNextAnimation = 0;
 bool gInTransition = false;
 int16_t gFadeRatio = 0;
 uint16_t gSweepX = 0;
 uint16_t gSweepY = 0;
-
-LedData gLeds;
-LedData gFadeBuffer;
+*/
 
 ezButton gButton(BUTTON_PIN);
 
@@ -176,12 +180,13 @@ void loop()
   // Use the button to trigger animation rotation
   gButton.loop();
   if ( gButton.isPressed() ) {
-    gNextAnimation = (gCurrentAnimation + 1) % ARRAY_SIZE(gAnimations);
-    gAnimations[gNextAnimation]->Setup();
-    gCurrentAnimation = gNextAnimation;
-    gInTransition = 0;
+    gCurrentAnimation = (gCurrentAnimation + 1) % ARRAY_SIZE(gAnimations);
+    gAnimations[gCurrentAnimation]->Setup();
+    //gCurrentAnimation = gNextAnimation;
+    //gInTransition = 0;
   }
   
+  /*
   EVERY_N_SECONDS(ANIMATION_INTERVAL) {
     gInTransition = true;
     gFadeRatio = 0;
@@ -190,6 +195,7 @@ void loop()
     gNextAnimation = (gCurrentAnimation + 1) % ARRAY_SIZE(gAnimations);
     gAnimations[gNextAnimation]->Setup();
   }
+  */
 
 /*
   EVERY_N_MILLISECONDS(ANIMATION_FADE_DURATION * 1000 / 64) {
@@ -210,6 +216,7 @@ void loop()
   // Render a frame of the current animation
   gAnimations[gCurrentAnimation]->Loop(&gLeds);
 
+/*
   if ( gInTransition ) {
     gAnimations[gNextAnimation]->Loop(&gFadeBuffer);
 
@@ -247,7 +254,7 @@ void loop()
       }
     }
   }
-
+*/
   FastLED.show();
 
   #ifdef DEBUG                                             

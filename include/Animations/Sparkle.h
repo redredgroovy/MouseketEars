@@ -24,7 +24,7 @@ class Sparkle : public Animation
         {
             unsigned long now = millis();
 
-            if ( now - this->spawnTimer > 30 ) {
+            if ( now - this->spawnTimer > 20 ) {
                 CHSV color;
                 this->spawnTimer = now;
 
@@ -42,7 +42,7 @@ class Sparkle : public Animation
                 data->leftLeds->fadeToBlackBy(32);
                 data->rightLeds->fadeToBlackBy(32);
             }
-         }
+        }
 
     protected:
         unsigned long spawnTimer = 0;

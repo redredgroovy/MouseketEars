@@ -1,6 +1,6 @@
 #include "Animation.h"
 
-#ifndef Acid_
+#ifndef Acid_h
 #define Acid_h
 
 class Acid : public Animation
