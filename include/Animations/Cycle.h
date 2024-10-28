@@ -31,102 +31,116 @@ class Cycle : public Animation
 {
     public:
         
-        Cycle(LedData *fadeBuffer) :
-            Animation(),
-            fadeBuffer(fadeBuffer)
+        Cycle() : Animation()
         {
+            // Initialize the buffer for transitioning between two animations
+            mFadeBuffer.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
+            mFadeBuffer.leftLeds = new CRGBSet(mFadeBuffer.rawLeftLeds, NUM_LEDS_PER_EAR);
+            mFadeBuffer.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
+            mFadeBuffer.rightLeds = new CRGBSet(mFadeBuffer.rawRightLeds, NUM_LEDS_PER_EAR);
+            mFadeBuffer.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
+            mFadeBuffer.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
+
+            // Define CRGBSets for each individual LED ring to simplify certain animations
+            uint8_t led_index = 0;
+            for( uint8_t ring = 0; ring < NUM_RINGS; ring++ ) {
+                mFadeBuffer.leftRings[ring] = new CRGBSet(*(mFadeBuffer.leftLeds), led_index, led_index+RING_SIZE[ring]-1);
+                mFadeBuffer.rightRings[ring] = new CRGBSet(*(mFadeBuffer.rightLeds), led_index, led_index+RING_SIZE[ring]-1);
+                led_index += RING_SIZE[ring];
+            }
         }
 
         void Setup()
         {
-            this->startup = true;
-            this->current = 0;
-            this->fadeTimer = millis();
+            mStartup = true;
+            mCurrent = 0;
+            mFadeTimer = millis();
             
-            this->inTransition = true;
-            this->fadeRatio = 0;
-            this->sweepX = 0;
-            this->sweepY = 0;
-            this->next = 0;
-            animationCycle[this->next]->Setup();
+            mInTransition = true;
+            mFadeRatio = 0;
+            mSweepX = 0;
+            mSweepY = 0;
+            mNext = 0;
+            animationCycle[mNext]->Setup();
         }
 
         void Loop(LedData *data)
         {
             unsigned long now = millis();
 
-             if ( now - this->fadeTimer > ANIMATION_INTERVAL_MS ) {
-                this->fadeTimer = now;
+             if ( now - mFadeTimer > ANIMATION_INTERVAL_MS ) {
+                mFadeTimer = now;
 
-                this->inTransition = true;
-                this->fadeRatio = 0;
-                this->sweepX = 0;
-                this->sweepY = 0;
-                this->next = (this->current + 1) % ARRAY_SIZE(animationCycle);
-                animationCycle[this->next]->Setup();
+                mInTransition = true;
+                mFadeRatio = 0;
+                mSweepX = 0;
+                mSweepY = 0;
+                mNext = (mCurrent + 1) % ARRAY_SIZE(animationCycle);
+                animationCycle[mNext]->Setup();
             }
 
             // Render a frame of the current animation
-            if ( this->startup ) {
+            if ( mStartup ) {
                 data->leftLeds->fill_solid(CRGB::Black);
                 data->rightLeds->fill_solid(CRGB::Black);
             } else {            
-                animationCycle[this->current]->Loop(data);
+                animationCycle[mCurrent]->Loop(data);
             }
 
-            if ( inTransition ) {
+            if ( mInTransition ) {
                 // Render a frame of the incoming animation
-                animationCycle[this->next]->Loop(this->fadeBuffer);
+                animationCycle[mNext]->Loop(&mFadeBuffer);
 
                 // Sweep from left to right within ANIMATION_FADE_DURATION
                 EVERY_N_MILLISECONDS(ANIMATION_FADE_DURATION_MS / (VIRTUAL_EAR_COLS*2)) {
-                    this->sweepX++;
-                    if ( this->sweepX >= (VIRTUAL_EAR_COLS*2) ) {
-                        this->startup = false;
-                        this->inTransition = false;
-                        this->current = this->next;
+                    mSweepX++;
+                    if ( mSweepX >= (VIRTUAL_EAR_COLS*2) ) {
+                        mStartup = false;
+                        mInTransition = false;
+                        mCurrent = mNext;
                     }
                 }
 
                 // Sweep the left ear...
-                if ( this->sweepX < VIRTUAL_EAR_COLS ) {
+                if ( mSweepX < VIRTUAL_EAR_COLS ) {
                     for ( uint8_t i = 0; i < data->leftLeds->size(); i++ ) {
-                        if ( coordsX16[i] < this->sweepX ) {
-                            (*data->leftLeds)[i] = CRGB((*this->fadeBuffer->leftLeds)[i]);
+                        if ( gCoordsX16[i] < mSweepX ) {
+                            (*data->leftLeds)[i] = CRGB((*mFadeBuffer.leftLeds)[i]);
                         }
                     }
                 // ...then the right ear
                 } else {
-                    (*data->leftLeds) = (*this->fadeBuffer->leftLeds);
+                    (*data->leftLeds) = (*mFadeBuffer.leftLeds);
                     for ( uint8_t i = 0; i < data->rightLeds->size(); i++ ) {
-                        if ( coordsX16[i] < this->sweepX - VIRTUAL_EAR_COLS ) {
-                            (*data->rightLeds)[i] = CRGB((*this->fadeBuffer->rightLeds)[i]);
+                        if ( gCoordsX16[i] < mSweepX - VIRTUAL_EAR_COLS ) {
+                            (*data->rightLeds)[i] = CRGB((*mFadeBuffer.rightLeds)[i]);
                         }
                     }
                 }
 
                 // Overlay the transition line and sparkles
                 for ( int y = 0; y < VIRTUAL_EAR_ROWS; y++ ) {
-                    setWidePixelXY(data, this->sweepX, y, CHSV(Gold_h.h,255,192));
-                    if ( this->sweepX > 0 && random(5) == 1 ) {
-                        setWidePixelXY(data, this->sweepX-1, y, CHSV(0,0,192)); 
+                    setWidePixelXY(data, mSweepX, y, CHSV(Gold_h.h,255,192));
+                    if ( mSweepX > 0 && random(5) == 1 ) {
+                        setWidePixelXY(data, mSweepX-1, y, CHSV(0,0,192)); 
                     }
                 }
             }
         }
     
     protected:
-        uint8_t current = 0;
-        uint8_t next = 0;
-        bool inTransition = false;
-        int16_t fadeRatio = 0;
-        uint16_t sweepX = 0;
-        uint16_t sweepY = 0;
-        bool startup = true;
+        uint8_t mCurrent = 0;
+        uint8_t mNext = 0;
 
-        LedData *fadeBuffer;
-    
-        unsigned long fadeTimer = 0;
+        bool mStartup = true;
+        bool mInTransition = false;
+
+        int16_t mFadeRatio = 0;
+        uint16_t mSweepX = 0;
+        uint16_t mSweepY = 0;
+      
+        LedData mFadeBuffer;
+        unsigned long mFadeTimer = 0;
 
 };
 

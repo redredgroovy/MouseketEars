@@ -15,7 +15,7 @@
 #include "Animations/Sparkle.h"
 #include "Animations/TwinkleFOX.h"
 
-#undef DEBUG
+#define DEBUG
 
 #define LEFT_EAR_PIN D5
 #define RIGHT_EAR_PIN D4
@@ -35,10 +35,10 @@
 #endif
 
 LedData gLeds;
-LedData gFadeBuffer;
+//LedData gFadeBuffer;
 
 Animation* gAnimations[] = {
-  new Cycle(&gFadeBuffer),
+  new Cycle(),
 
   new Acid(LavaColors_p, 128),
   new Acid(OceanColors_p, 128),
@@ -60,15 +60,7 @@ Animation* gAnimations[] = {
 
   new Charge(),
 };
-
 uint8_t gCurrentAnimation = 0;
-/*
-uint8_t gNextAnimation = 0;
-bool gInTransition = false;
-int16_t gFadeRatio = 0;
-uint16_t gSweepX = 0;
-uint16_t gSweepY = 0;
-*/
 
 ezButton gButton(BUTTON_PIN);
 
@@ -131,6 +123,7 @@ void setup()
   gLeds.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
   gLeds.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
 
+/*
   // Initialize the buffer for transitioning between two animations
   gFadeBuffer.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
   gFadeBuffer.leftLeds = new CRGBSet(gFadeBuffer.rawLeftLeds, NUM_LEDS_PER_EAR);
@@ -138,14 +131,14 @@ void setup()
   gFadeBuffer.rightLeds = new CRGBSet(gFadeBuffer.rawRightLeds, NUM_LEDS_PER_EAR);
   gFadeBuffer.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
   gFadeBuffer.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
-
+*/
   // Define CRGBSets for each individual LED ring to simplify certain animations
   uint8_t led_index = 0;
   for( uint8_t ring = 0; ring < NUM_RINGS; ring++ ) {
     gLeds.leftRings[ring] = new CRGBSet(*(gLeds.leftLeds), led_index, led_index+RING_SIZE[ring]-1);
     gLeds.rightRings[ring] = new CRGBSet(*(gLeds.rightLeds), led_index, led_index+RING_SIZE[ring]-1);
-    gFadeBuffer.leftRings[ring] = new CRGBSet(*(gFadeBuffer.leftLeds), led_index, led_index+RING_SIZE[ring]-1);
-    gFadeBuffer.rightRings[ring] = new CRGBSet(*(gFadeBuffer.rightLeds), led_index, led_index+RING_SIZE[ring]-1);
+    //gFadeBuffer.leftRings[ring] = new CRGBSet(*(gFadeBuffer.leftLeds), led_index, led_index+RING_SIZE[ring]-1);
+    //gFadeBuffer.rightRings[ring] = new CRGBSet(*(gFadeBuffer.rightLeds), led_index, led_index+RING_SIZE[ring]-1);
     led_index += RING_SIZE[ring];
   }
 
@@ -182,79 +175,10 @@ void loop()
   if ( gButton.isPressed() ) {
     gCurrentAnimation = (gCurrentAnimation + 1) % ARRAY_SIZE(gAnimations);
     gAnimations[gCurrentAnimation]->Setup();
-    //gCurrentAnimation = gNextAnimation;
-    //gInTransition = 0;
   }
   
-  /*
-  EVERY_N_SECONDS(ANIMATION_INTERVAL) {
-    gInTransition = true;
-    gFadeRatio = 0;
-    gSweepX = 0;
-    gSweepY = 0;
-    gNextAnimation = (gCurrentAnimation + 1) % ARRAY_SIZE(gAnimations);
-    gAnimations[gNextAnimation]->Setup();
-  }
-  */
-
-/*
-  EVERY_N_MILLISECONDS(ANIMATION_FADE_DURATION * 1000 / 64) {
-    if ( gInTransition ) {
-      if ( gFadeRatio < 128 ) {
-        gFadeRatio += 4;
-      } else {
-        gFadeRatio += 1;
-      }
-      if ( gFadeRatio >= 255) {
-        gInTransition = false;
-        gCurrentAnimation = gNextAnimation;
-      }
-    } 
-  }
-*/
-
   // Render a frame of the current animation
   gAnimations[gCurrentAnimation]->Loop(&gLeds);
-
-/*
-  if ( gInTransition ) {
-    gAnimations[gNextAnimation]->Loop(&gFadeBuffer);
-
-    // Sweep from left to right within ANIMATION_FADE_DURATION
-    EVERY_N_MILLISECONDS(ANIMATION_FADE_DURATION / (VIRTUAL_EAR_COLS*2)) {
-      gSweepX++;
-      if ( gSweepX >= (VIRTUAL_EAR_COLS*2) ) {
-        gInTransition = false;
-        gCurrentAnimation = gNextAnimation;
-      }
-    }
-
-    // Sweep the left ear...
-    if ( gSweepX < VIRTUAL_EAR_COLS ) {
-      for ( uint8_t i = 0; i < gLeds.leftLeds->size(); i++ ) {
-        if ( coordsX16[i] < gSweepX ) {
-          (*gLeds.leftLeds)[i] = CRGB((*gFadeBuffer.leftLeds)[i]);
-        }
-      }
-    // ...then the right ear
-    } else {
-      (*gLeds.leftLeds) = (*gFadeBuffer.leftLeds);
-      for ( uint8_t i = 0; i < gLeds.rightLeds->size(); i++ ) {
-        if ( coordsX16[i] < gSweepX - VIRTUAL_EAR_COLS ) {
-          (*gLeds.rightLeds)[i] = CRGB((*gFadeBuffer.rightLeds)[i]);
-        }
-      }
-    }
-
-    // Overlay the transition line and sparkles
-    for ( int y = 0; y < VIRTUAL_EAR_ROWS; y++ ) {
-      setWidePixelXY(&gLeds, gSweepX, y, CHSV(Gold_h.h,255,192));
-      if ( gSweepX>0 && random(5) == 1 ) {
-          setWidePixelXY(&gLeds, gSweepX-1, y, CHSV(0,0,192)); 
-      }
-    }
-  }
-*/
   FastLED.show();
 
   #ifdef DEBUG                                             
@@ -263,5 +187,4 @@ void loop()
       Serial.printf("a:%0.3f m:%0.3f %d%%\n", gVoltageSamples.getAverage(), gVoltageSamples.getMedian(), currentChargePct(gVoltageSamples.getMedian()));
     }
   #endif
-
 }

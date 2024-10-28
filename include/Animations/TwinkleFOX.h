@@ -12,13 +12,13 @@ class TwinkleFOX : public Animation
         
         TwinkleFOX(CRGBPalette16 palette = PartyColors_p) :
             Animation(),
-            currentPalette(palette)
+            mCurrentPalette(palette)
         {
         }
 
 		TwinkleFOX(CRGBPalette16 palette, const uint8_t fadeScale) :
 			Animation(fadeScale),
-			currentPalette(palette)
+			mCurrentPalette(palette)
         {
         }
 
@@ -41,8 +41,8 @@ class TwinkleFOX : public Animation
             // the current palette are identical, then a deeply faded version of
             // that color is used for the background color
             CRGB bg;
-            if( (AUTO_SELECT_BACKGROUND_COLOR == 1) && (currentPalette[0] == currentPalette[1] )) {
-                bg = currentPalette[0];
+            if( (AUTO_SELECT_BACKGROUND_COLOR == 1) && (mCurrentPalette[0] == mCurrentPalette[1] )) {
+                bg = mCurrentPalette[0];
                 uint8_t bglight = bg.getAverageLight();
                 if( bglight > 64) {
                     bg.nscale8_video( 16); // very bright, so scale to 1/16th
@@ -52,7 +52,7 @@ class TwinkleFOX : public Animation
                     bg.nscale8_video( 86); // dim, scale to 1/3rd.
                 }
             } else {
-                bg = backgroundColor; // just use the explicitly defined background color
+                bg = mBackgroundColor; // just use the explicitly defined background color
             }
 
             uint8_t backgroundBrightness = bg.getAverageLight();
@@ -91,9 +91,9 @@ class TwinkleFOX : public Animation
                     }
                 }
             }
-            if ( fadeScale > 0 ) {
-                data->leftLeds->fadeLightBy(this->fadeScale);
-		    	data->rightLeds->fadeLightBy(this->fadeScale);
+            if ( mFadeScale > 0 ) {
+                data->leftLeds->fadeLightBy(mFadeScale);
+		    	data->rightLeds->fadeLightBy(mFadeScale);
             }
         }
 
@@ -118,7 +118,7 @@ class TwinkleFOX : public Animation
 
         CRGB computeOneTwinkle( uint32_t ms, uint8_t salt)
         {
-            uint16_t ticks = ms >> (8-twinkleSpeed);
+            uint16_t ticks = ms >> (8-mTwinkleSpeed);
             uint8_t fastcycle8 = ticks;
             uint16_t slowcycle16 = (ticks >> 8) + salt;
             slowcycle16 += sin8( slowcycle16);
@@ -126,14 +126,14 @@ class TwinkleFOX : public Animation
             uint8_t slowcycle8 = (slowcycle16 & 0xFF) + (slowcycle16 >> 8);
 
             uint8_t bright = 0;
-            if( ((slowcycle8 & 0x0E)/2) < twinkleDensity) {
+            if( ((slowcycle8 & 0x0E)/2) < mTwinkleDensity) {
                 bright = attackDecayWave8( fastcycle8);
             }
 
             uint8_t hue = slowcycle8 - salt;
             CRGB c;
             if( bright > 0) {
-                c = ColorFromPalette( currentPalette, hue, bright, NOBLEND);
+                c = ColorFromPalette( mCurrentPalette, hue, bright, NOBLEND);
                 if( COOL_LIKE_INCANDESCENT == 1 ) {
                 coolLikeIncandescent( c, fastcycle8);
                 }
@@ -144,10 +144,10 @@ class TwinkleFOX : public Animation
         }
 
     protected:
-        uint8_t twinkleSpeed = 4;
-        uint8_t twinkleDensity = 5;
-        CRGB backgroundColor = CRGB::Black;
-        CRGBPalette16 currentPalette;
+        uint8_t mTwinkleSpeed = 4;
+        uint8_t mTwinkleDensity = 5;
+        CRGB mBackgroundColor = CRGB::Black;
+        CRGBPalette16 mCurrentPalette;
 
 };
 

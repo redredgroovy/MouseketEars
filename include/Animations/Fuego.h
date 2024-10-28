@@ -9,13 +9,13 @@ class Fuego : public Animation
         
         Fuego(const CHSV color = FireOrange_h) :
             Animation(),
-            color(color)
+            mColor(color)
         {
         }
 
 		Fuego(const CHSV color, const uint8_t fadeScale) :
             Animation(fadeScale),
-            color(color)
+            mColor(color)
         {
         }
 
@@ -95,8 +95,7 @@ class Fuego : public Animation
 			for (uint8_t y = 0; y < VIRTUAL_EAR_ROWS; y++) {
 				for (uint8_t x = 0; x < VIRTUAL_EAR_COLS; x++) {
 					// map the colors based on heatmap
-					//(*data->leftRing)[XY(x,y)] = this->rainbowMode ? CHSV(beat8(1), 255, 255) : this->color;
-                    buf[XY(x,y)] = this->color;
+                    buf[XY(x,y)] = mColor;
                     buf[XY(x,y)].nscale8(heat[XY(x,y)]);
 
 					// dim the result based on 2nd noise layer
@@ -106,15 +105,15 @@ class Fuego : public Animation
 				}
 		 	}
 
-			if (this->fadeScale > 0) {
-				data->leftLeds->fadeLightBy(this->fadeScale);
-				data->rightLeds->fadeLightBy(this->fadeScale);
+			if (mFadeScale > 0) {
+				data->leftLeds->fadeLightBy(mFadeScale);
+				data->rightLeds->fadeLightBy(mFadeScale);
 			}
 		}
 
 
     protected:
-        const CHSV color;
+        const CHSV mColor;
 
         // parameters and buffer for the noise array
 		static const uint8_t numLayers = 2;

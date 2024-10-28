@@ -9,13 +9,13 @@ class Acid : public Animation
         
 		Acid(CRGBPalette16 palette = PoisonGreen_p) :
 			Animation(),
-			currentPalette(palette)
+			mCurrentPalette(palette)
         {
         }
 		
 		Acid(CRGBPalette16 palette, const uint8_t fadeScale) :
 			Animation(fadeScale),
-			currentPalette(palette)
+			mCurrentPalette(palette)
         {
         }
 
@@ -37,6 +37,37 @@ class Acid : public Animation
 				scale_y[i] = 6000;
 			}
         }
+
+
+
+        void Loop(LedData *data)
+        {
+			x[0] = beatsin16(3, 200, 64000);
+			y[0] += 100;
+			z[0] = 7000;
+			scale_x[0] = 6000;
+			scale_y[0] = 8000;
+			FillNoise(0); 
+
+			x[1] = beatsin16(2, 200, 64000);
+			y[1] += 130;
+			z[1] = 7000;
+			scale_x[1] = 6000;
+			scale_y[1] = 8000;
+			FillNoise(1);   
+
+			x[2] = beatsin16(4, 200, 6400);
+			y[2] += 1000;
+			z[2] = 3000;
+			scale_x[2] = 7000;
+			scale_y[2] = 8000;
+			FillNoise(2);
+
+			MergeMethod1(data, 2);
+
+			data->leftLeds->fadeLightBy(mFadeScale);
+			data->rightLeds->fadeLightBy(mFadeScale);
+		}
 
 		void FillNoise(byte layer)
 		{
@@ -77,7 +108,7 @@ class Acid : public Animation
 					uint8_t bri = (noise[2][i][j]);
 
 					// assign a color depending on the actual palette
-					CRGB pixel = ColorFromPalette(currentPalette, colorrepeat * (color + colorshift), bri);
+					CRGB pixel = ColorFromPalette(mCurrentPalette, colorrepeat * (color + colorshift), bri);
 
 					// Map a virtual matrix across both ears
 					if ( i < VIRTUAL_EAR_COLS ) {
@@ -88,37 +119,6 @@ class Acid : public Animation
 				}
 			}
 		}
-
-        void Loop(LedData *data)
-        {
-			x[0] = beatsin16(3, 200, 64000);
-			y[0] += 100;
-			z[0] = 7000;
-			scale_x[0] = 6000;
-			scale_y[0] = 8000;
-			FillNoise(0); 
-
-			x[1] = beatsin16(2, 200, 64000);
-			y[1] += 130;
-			z[1] = 7000;
-			scale_x[1] = 6000;
-			scale_y[1] = 8000;
-			FillNoise(1);   
-
-			x[2] = beatsin16(4, 200, 6400);
-			y[2] += 1000;
-			z[2] = 3000;
-			scale_x[2] = 7000;
-			scale_y[2] = 8000;
-			FillNoise(2);
-
-			MergeMethod1(data, 2);
-
-			data->leftLeds->fadeLightBy(this->fadeScale);
-			data->rightLeds->fadeLightBy(this->fadeScale);
-		}
-
-
     protected:
 
     	static const uint8_t NUM_LAYERS = 3;
@@ -131,7 +131,7 @@ class Acid : public Animation
 
 		uint8_t noise[NUM_LAYERS][(VIRTUAL_EAR_COLS*2)][VIRTUAL_EAR_ROWS];
 
-		CRGBPalette16 currentPalette;
+		CRGBPalette16 mCurrentPalette;
 		byte colorshift;
 		uint8_t noisesmoothing;
 

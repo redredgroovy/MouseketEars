@@ -15,14 +15,14 @@ uint16_t XY(uint8_t x, uint8_t y)
 class Animation {
     public:
         Animation(uint8_t fadeScale=0) :
-            fadeScale(fadeScale)
+            mFadeScale(fadeScale)
         { 
         };
 
         virtual void Setup() = 0;
         virtual void Loop(LedData *data) = 0;
 
-        const uint8_t fadeScale;
+        const uint8_t mFadeScale;
 };
 
 #endif

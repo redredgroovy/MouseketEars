@@ -9,47 +9,47 @@ class Sparkle : public Animation
         
         Sparkle(const bool rainbow, const CHSV color = CHSV(0,0,255)) :
             Animation(),
-            rainbow(rainbow),
-            color(color)
+            mRainbow(rainbow),
+            mColor(color)
         {
         }
 
         void Setup()
         {
-            this->spawnTimer = millis();
-            this->fadeTimer = millis();
+            mSpawnTimer = millis();
+            mFadeTimer = millis();
         }
 
         void Loop(LedData *data)
         {
             unsigned long now = millis();
 
-            if ( now - this->spawnTimer > 20 ) {
+            if ( now - mSpawnTimer > 20 ) {
                 CHSV color;
-                this->spawnTimer = now;
+                mSpawnTimer = now;
 
-                color = ( this->rainbow ? CHSV(random(0,255), 255, 255) : this->color );
+                color = ( mRainbow ? CHSV(random(0,255), 255, 255) : mColor );
                 color.v = scale8_video(color.v, 192);
 		        (*data->leftLeds)[random(0, data->leftLeds->size())] = color;
                 
-                color = ( this->rainbow ? CHSV(random(0,255), 255, 255) : this->color );
+                color = ( mRainbow ? CHSV(random(0,255), 255, 255) : mColor );
                 color.v = scale8_video(color.v, 192);
 		        (*data->rightLeds)[random(0, data->rightLeds->size())] = color;
             }
 
-            if ( now - this->fadeTimer > 10 ) {
-                this->fadeTimer = now;
+            if ( now - mFadeTimer > 10 ) {
+                mFadeTimer = now;
                 data->leftLeds->fadeToBlackBy(32);
                 data->rightLeds->fadeToBlackBy(32);
             }
         }
 
     protected:
-        unsigned long spawnTimer = 0;
-        unsigned long fadeTimer = 0;
+        unsigned long mSpawnTimer = 0;
+        unsigned long mFadeTimer = 0;
 
-        const bool rainbow;
-        const CHSV color;
+        const bool mRainbow;
+        const CHSV mColor;
 
 };
 
