@@ -9,7 +9,7 @@
 #include "Animations/Sparkle.h"
 #include "Animations/TwinkleFOX.h"
 
-#define ANIMATION_INTERVAL_MS 15 * 1000
+#define ANIMATION_INTERVAL_MS 20 * 1000
 #define ANIMATION_FADE_DURATION_MS 1000
 
 Animation* animationCycle[] = {

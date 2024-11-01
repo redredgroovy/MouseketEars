@@ -86,7 +86,7 @@ class Fuego : public Animation
 					uint8_t dim = noise[0][x][y];
 			 		// high value = high flames
 					//dim = dim / 1.7;
-					dim = dim / 3;
+					dim = dim / 3.0;
 					dim = 255 - dim;
 					heat[XY(x, y)] = scale8(heat[XY(x, y)] , dim);
 				}

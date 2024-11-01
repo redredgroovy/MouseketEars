@@ -15,7 +15,7 @@
 #include "Animations/Sparkle.h"
 #include "Animations/TwinkleFOX.h"
 
-#define DEBUG
+#undef DEBUG
 
 #define LEFT_EAR_PIN D5
 #define RIGHT_EAR_PIN D4
@@ -35,7 +35,6 @@
 #endif
 
 LedData gLeds;
-//LedData gFadeBuffer;
 
 Animation* gAnimations[] = {
   new Cycle(),
@@ -55,6 +54,7 @@ Animation* gAnimations[] = {
   new TwinkleFOX(FairyLight_p, 128),
   new TwinkleFOX(Ice_p),
   new TwinkleFOX(Snow_p),
+  new TwinkleFOX(BlueWhite_p),
 
   new Hypno(192),
 
@@ -66,16 +66,14 @@ ezButton gButton(BUTTON_PIN);
 
 RunningMedian gVoltageSamples = RunningMedian(16);
 
-// Courtesy of https://github.com/G6EJD/LiPo_Battery_Capacity_Estimator
 uint8_t currentChargePct(float voltage)
 {
+  // Cutoff at 3.5 volts - we're likely under 5% capacity anyway.
   if ( voltage < 3.5 ) { return 0; }
   else if ( voltage > 4.2 ) { return 100; }
-  
-  return (uint8_t)(2808.3808 * pow(voltage, 4) - 
-                   43560.9157 * pow(voltage, 3) +
-                   252848.5888 * pow(voltage, 2) -
-                   650767.4615 * voltage + 626532.5703);
+
+  // Approximation of discharge curve from 4.2  -> 3.5 volts
+  return (uint8_t)(123 - (123 / (pow(1 + pow((voltage/3.7), 80), 0.165))));
 }
 
 // Once we enter voltageCutoff, we stay here for safety until the controller is reset
@@ -86,7 +84,7 @@ void voltageCutoff()
   }
 
   #ifdef DEBUG
-    Serial.println("Triggered voltage cutoff");
+  Serial.println("Triggered voltage cutoff");
   #endif 
 
   FastLED.clear();
@@ -108,7 +106,7 @@ void setup()
 	while (!Serial && millis() < 2000);
 
   #ifdef DEBUG
-    delay(2000); // failsafe to avoid a bricked controller
+  delay(2000); // failsafe to avoid a bricked controller
   #endif
 
   // Initialize the FastLED configuration
@@ -123,15 +121,6 @@ void setup()
   gLeds.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
   gLeds.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
 
-/*
-  // Initialize the buffer for transitioning between two animations
-  gFadeBuffer.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
-  gFadeBuffer.leftLeds = new CRGBSet(gFadeBuffer.rawLeftLeds, NUM_LEDS_PER_EAR);
-  gFadeBuffer.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * NUM_LEDS_PER_EAR);
-  gFadeBuffer.rightLeds = new CRGBSet(gFadeBuffer.rawRightLeds, NUM_LEDS_PER_EAR);
-  gFadeBuffer.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
-  gFadeBuffer.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * NUM_RINGS);
-*/
   // Define CRGBSets for each individual LED ring to simplify certain animations
   uint8_t led_index = 0;
   for( uint8_t ring = 0; ring < NUM_RINGS; ring++ ) {
@@ -182,9 +171,9 @@ void loop()
   FastLED.show();
 
   #ifdef DEBUG                                             
-    EVERY_N_MILLISECONDS(1000) {
-      Serial.printf("FPS: %d\n", FastLED.getFPS());
-      Serial.printf("a:%0.3f m:%0.3f %d%%\n", gVoltageSamples.getAverage(), gVoltageSamples.getMedian(), currentChargePct(gVoltageSamples.getMedian()));
-    }
+  EVERY_N_MILLISECONDS(1000) {
+    Serial.printf("FPS: %d\n", FastLED.getFPS());
+    Serial.printf("a:%0.3f m:%0.3f %d%%\n", gVoltageSamples.getAverage(), gVoltageSamples.getMedian(), currentChargePct(gVoltageSamples.getMedian()));
+  }
   #endif
 }

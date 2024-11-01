@@ -96,10 +96,10 @@ void setWidePixelXY(LedData *data, uint8_t x, uint8_t y, CRGB color)
 //
 // Custom colors and palettes
 //
-CHSV FireOrange_h = CHSV(24,255,255);
+CHSV FireOrange_h = CHSV(28,255,255);
 CHSV PoisonGreen_h = CHSV(90,255,255);
 CHSV IceGreen_h = CHSV(120,255,255);
-CHSV IceBlue_h = CHSV(170,255,255);
+CHSV IceBlue_h = CHSV(145,255,255);
 CHSV Gold_h = CHSV(40,255,255);
 
 CRGBPalette16 IceColors_p = CRGBPalette16(
@@ -143,6 +143,15 @@ const TProgmemRGBPalette16 Ice_p FL_PROGMEM = {
   Ice_Blue1, Ice_Blue1, Ice_Blue1, Ice_Blue1,
   Ice_Blue1, Ice_Blue1, Ice_Blue1, Ice_Blue1,
   Ice_Blue2, Ice_Blue2, Ice_Blue2, Ice_Blue3
+};
+
+// A mostly blue palette with white accents.
+// "CRGB::Gray" is used as white to keep the brightness more uniform.
+const TProgmemRGBPalette16 BlueWhite_p FL_PROGMEM = {
+  CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, 
+   CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, 
+   CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, 
+   CRGB::Blue, CRGB::Gray, CRGB::Gray, CRGB::Gray
 };
 
 #endif
