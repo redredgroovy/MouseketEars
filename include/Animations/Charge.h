@@ -26,7 +26,7 @@ class Charge : public Animation
 			//EVERY_N_SECONDS(2) {
 				uint8_t scale = (uint8_t)(currentChargePct(gVoltageSamples.getMedian()) / 100.0 * 35.0); //data->leftRings[0]->size());
 				//(*data->leftLeds)[31] = CRGB(0,64,0);
-				(*data->leftLeds)(scale,hw::ringSize[0]-1) = CRGB::Black;
+				(*data->leftLeds)(scale,HW_RING_SIZE[0]-1) = CRGB::Black;
 			//}
 		}
 

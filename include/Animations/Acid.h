@@ -68,11 +68,11 @@ class Acid : public Animation
 
 		void FillNoise(byte layer)
 		{
-			for(uint8_t i = 0; i < (hw::vCols*2); i++) {
-				uint32_t ioffset = scale_x[layer] * (i-(hw::vCols*2)/2);
+			for(uint8_t i = 0; i < (HW_VIRTUAL_COLS*2); i++) {
+				uint32_t ioffset = scale_x[layer] * (i-(HW_VIRTUAL_COLS*2)/2);
 
-				for(uint8_t j = 0; j < hw::vRows; j++) {
-					uint32_t joffset = scale_y[layer] * (j-hw::vRows/2);
+				for(uint8_t j = 0; j < HW_VIRTUAL_ROWS; j++) {
+					uint32_t joffset = scale_y[layer] * (j-HW_VIRTUAL_ROWS/2);
 
 					byte data = inoise16(x[layer] + ioffset, y[layer] + joffset, z[layer]) >> 8;
 
@@ -91,8 +91,8 @@ class Acid : public Animation
 
 		void MergeMethod1(LedData *data, byte colorrepeat)
 		{
-			for(uint8_t i = 0; i < (hw::vCols*2); i++) {
-				for(uint8_t j = 0; j < hw::vRows; j++) {
+			for(uint8_t i = 0; i < (HW_VIRTUAL_COLS*2); i++) {
+				for(uint8_t j = 0; j < HW_VIRTUAL_ROWS; j++) {
 
 					// map the noise values down to a byte range
 					// layer 0 and 2 interfere for the color
@@ -108,10 +108,10 @@ class Acid : public Animation
 					CRGB pixel = ColorFromPalette(mCurrentPalette, colorrepeat * (color + colorshift), bri);
 
 					// Map a virtual matrix across both ears
-					if ( i < hw::vCols ) {
+					if ( i < HW_VIRTUAL_COLS ) {
 						setPixelXY(data->leftLeds,i,j,pixel);
 					} else {
-						setPixelXY(data->rightLeds,i-hw::vCols,j,pixel);
+						setPixelXY(data->rightLeds,i-HW_VIRTUAL_COLS,j,pixel);
 					}
 				}
 			}
@@ -127,7 +127,7 @@ class Acid : public Animation
 		uint32_t scale_x[NUM_LAYERS];
 		uint32_t scale_y[NUM_LAYERS];
 
-		uint8_t noise[NUM_LAYERS][(hw::vCols*2)][hw::vRows];
+		uint8_t noise[NUM_LAYERS][(HW_VIRTUAL_COLS*2)][HW_VIRTUAL_ROWS];
 
 		CRGBPalette16 mCurrentPalette;
 		byte colorshift;

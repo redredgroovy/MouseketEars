@@ -53,7 +53,7 @@ Animation* gAnimations[] = {
 };
 uint8_t gCurrentAnimation = 0;
 
-ezButton gButton(BUTTON_PIN);
+ezButton gButton(HW_BUTTON_PIN);
 
 RunningMedian gVoltageSamples = RunningMedian(16);
 
@@ -70,7 +70,7 @@ uint8_t currentChargePct(float voltage)
 // Once we enter voltageCutoff, we stay here for safety until the controller is reset
 void voltageCutoff()
 {
-	if ( gVoltageSamples.getMedian() >= VOLTAGE_CUTOFF ) {
+	if ( gVoltageSamples.getMedian() >= HW_VOLTAGE_CUTOFF ) {
 		return;
 	}
 	DPRINTLN("Triggered voltage cutoff");
@@ -98,29 +98,29 @@ void setup()
 	#endif
 
 	// Initialize the FastLED configuration
-	FastLED.setMaxPowerInMilliWatts(MAX_POWER_IN_MW);
-	FastLED.setBrightness(MAX_BRIGHTNESS);
+	FastLED.setMaxPowerInMilliWatts(HW_MAX_POWER_IN_MW);
+	FastLED.setBrightness(HW_MAX_BRIGHTNESS);
 
 	// Initialize the FastLED pixel data
-	gLeds.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * hw::ledsPerEar);
-	gLeds.leftLeds = new CRGBSet(gLeds.rawLeftLeds, hw::ledsPerEar);
-	gLeds.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * hw::ledsPerEar);
-	gLeds.rightLeds = new CRGBSet(gLeds.rawRightLeds, hw::ledsPerEar);
-	gLeds.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * hw::numRings);
-	gLeds.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * hw::numRings);
+	gLeds.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * HW_LEDS_PER_EAR);
+	gLeds.leftLeds = new CRGBSet(gLeds.rawLeftLeds, HW_LEDS_PER_EAR);
+	gLeds.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * HW_LEDS_PER_EAR);
+	gLeds.rightLeds = new CRGBSet(gLeds.rawRightLeds, HW_LEDS_PER_EAR);
+	gLeds.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * HW_NUM_RINGS);
+	gLeds.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * HW_NUM_RINGS);
 
 	// Define CRGBSets for each individual LED ring to simplify certain animations
 	uint8_t led_index = 0;
-	for( uint8_t ring = 0; ring < hw::numRings; ring++ ) {
-		gLeds.leftRings[ring] = new CRGBSet(*(gLeds.leftLeds), led_index, led_index+hw::ringSize[ring]-1);
-		gLeds.rightRings[ring] = new CRGBSet(*(gLeds.rightLeds), led_index, led_index+hw::ringSize[ring]-1);
-		//gFadeBuffer.leftRings[ring] = new CRGBSet(*(gFadeBuffer.leftLeds), led_index, led_index+hw::ringSize[ring]-1);
-		//gFadeBuffer.rightRings[ring] = new CRGBSet(*(gFadeBuffer.rightLeds), led_index, led_index+hw::ringSize[ring]-1);
-		led_index += hw::ringSize[ring];
+	for( uint8_t ring = 0; ring < HW_NUM_RINGS; ring++ ) {
+		gLeds.leftRings[ring] = new CRGBSet(*(gLeds.leftLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
+		gLeds.rightRings[ring] = new CRGBSet(*(gLeds.rightLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
+		//gFadeBuffer.leftRings[ring] = new CRGBSet(*(gFadeBuffer.leftLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
+		//gFadeBuffer.rightRings[ring] = new CRGBSet(*(gFadeBuffer.rightLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
+		led_index += HW_RING_SIZE[ring];
 	}
 
-	FastLED.addLeds<CHIPSET, LEFT_EAR_PIN, PIXEL_ORDER>(gLeds.rawLeftLeds, hw::ledsPerEar);
-	FastLED.addLeds<CHIPSET, RIGHT_EAR_PIN, PIXEL_ORDER>(gLeds.rawRightLeds, hw::ledsPerEar);
+	FastLED.addLeds<HW_CHIPSET, HW_LEFT_EAR_PIN, HW_PIXEL_ORDER>(gLeds.rawLeftLeds, HW_LEDS_PER_EAR);
+	FastLED.addLeds<HW_CHIPSET, HW_RIGHT_EAR_PIN, HW_PIXEL_ORDER>(gLeds.rawRightLeds, HW_LEDS_PER_EAR);
 
 	FastLED.clear();
 	FastLED.show();
@@ -128,9 +128,9 @@ void setup()
 	gButton.setDebounceTime(50);
 
 	// Prime the voltage monitor and immediately enter the safety cuffoff if we are low volage
-	pinMode(VOLTAGE_PIN, INPUT);
+	pinMode(HW_VOLTAGE_PIN, INPUT);
 	for( uint8_t i = 0; i < 16; i++) {
-		float reading = 2 * analogReadMilliVolts(VOLTAGE_PIN) / 1000.0; // attenuation ratio 1/2, mV --> V
+		float reading = 2 * analogReadMilliVolts(HW_VOLTAGE_PIN) / 1000.0; // analog attenuation ratio 1/2, mV --> V
 		gVoltageSamples.add(reading); 
 	}
 	voltageCutoff();
@@ -140,9 +140,9 @@ void setup()
 
 void loop()
 {
-	// Sample the battery voltage 10 times per second and enter the safety cutoff if we are low voltage
-	EVERY_N_MILLISECONDS(100) {
-		float reading = 2 * analogReadMilliVolts(VOLTAGE_PIN) / 1000.0; // attenuation ratio 1/2, mV --> V
+	// Sample the battery voltage every second and enter the safety cutoff if we are low voltage
+	EVERY_N_SECONDS(1) {
+		float reading = 2 * analogReadMilliVolts(HW_VOLTAGE_PIN) / 1000.0; // analog attenuation ratio 1/2, mV --> V
 		gVoltageSamples.add(reading);
 		voltageCutoff();
 	}

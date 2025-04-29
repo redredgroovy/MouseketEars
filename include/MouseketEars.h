@@ -5,8 +5,6 @@
 #include "Hardware_v1.h"
 #include "Palettes.h"
 
-#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
-
 #define DEBUG 1
 
 #ifdef DEBUG
@@ -18,6 +16,8 @@
 	#define DPRINTF(...)
 	#define DPRINTLN(...)
 #endif
+
+#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
 typedef struct {
 	CRGB *rawLeftLeds;
@@ -48,13 +48,13 @@ class Animation {
 //
 void setPixelXY(CRGBSet *leds, uint8_t x, uint8_t y, CRGB color)
 {
-	if (x >= hw::vCols || y >= hw::vRows)
+	if ( x<0 || y<0 || x >= HW_VIRTUAL_COLS || y >= HW_VIRTUAL_ROWS)
 		return;
 
 	for (uint8_t i = 0; i < leds->size(); i++) {
-		if (hw::vCoordsX[i] != x)
+		if (HW_V_COORDS_X[i] != x)
 			continue;
-		if (hw::vCoordsY[i] != y)
+		if (HW_V_COORDS_Y[i] != y)
 			continue;
 		(*leds)[i] = color;
 	}
@@ -62,15 +62,17 @@ void setPixelXY(CRGBSet *leds, uint8_t x, uint8_t y, CRGB color)
 
 void setWidePixelXY(LedData *data, uint8_t x, uint8_t y, CRGB color)
 {
-	if ( x<0 || y<0 || x>=(hw::vCols*2) || y>=hw::vRows ) { return; }
-	if ( x < hw::vCols ) {
+	if ( x<0 || y<0 || x>=(HW_VIRTUAL_COLS*2) || y>=HW_VIRTUAL_ROWS )
+		return;
+		
+	if ( x < HW_VIRTUAL_COLS ) {
 		setPixelXY(data->leftLeds, x, y, color);
 	} else {
-		setPixelXY(data->rightLeds, x-hw::vCols, y, color);
+		setPixelXY(data->rightLeds, x-HW_VIRTUAL_COLS, y, color);
 	}
 }
 
 inline uint16_t XY(uint8_t x, uint8_t y)
 {
-	return x+(y*hw::vCols);
+	return x+(y*HW_VIRTUAL_COLS);
 }

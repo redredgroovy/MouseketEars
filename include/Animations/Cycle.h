@@ -33,19 +33,19 @@ class Cycle : public Animation
 		Cycle() : Animation()
 		{
 			// Initialize the buffer for transitioning between two animations
-			mFadeBuffer.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * hw::ledsPerEar);
-			mFadeBuffer.leftLeds = new CRGBSet(mFadeBuffer.rawLeftLeds, hw::ledsPerEar);
-			mFadeBuffer.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * hw::ledsPerEar);
-			mFadeBuffer.rightLeds = new CRGBSet(mFadeBuffer.rawRightLeds, hw::ledsPerEar);
-			mFadeBuffer.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * hw::numRings);
-			mFadeBuffer.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * hw::numRings);
+			mFadeBuffer.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * HW_LEDS_PER_EAR);
+			mFadeBuffer.leftLeds = new CRGBSet(mFadeBuffer.rawLeftLeds, HW_LEDS_PER_EAR);
+			mFadeBuffer.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * HW_LEDS_PER_EAR);
+			mFadeBuffer.rightLeds = new CRGBSet(mFadeBuffer.rawRightLeds, HW_LEDS_PER_EAR);
+			mFadeBuffer.leftRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * HW_NUM_RINGS);
+			mFadeBuffer.rightRings = (CRGBSet**)malloc(sizeof(CRGBSet*) * HW_NUM_RINGS);
 
 			// Define CRGBSets for each individual LED ring to simplify certain animations
 			uint8_t led_index = 0;
-			for( uint8_t ring = 0; ring < hw::numRings; ring++ ) {
-				mFadeBuffer.leftRings[ring] = new CRGBSet(*(mFadeBuffer.leftLeds), led_index, led_index+hw::ringSize[ring]-1);
-				mFadeBuffer.rightRings[ring] = new CRGBSet(*(mFadeBuffer.rightLeds), led_index, led_index+hw::ringSize[ring]-1);
-				led_index += hw::ringSize[ring];
+			for( uint8_t ring = 0; ring < HW_NUM_RINGS; ring++ ) {
+				mFadeBuffer.leftRings[ring] = new CRGBSet(*(mFadeBuffer.leftLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
+				mFadeBuffer.rightRings[ring] = new CRGBSet(*(mFadeBuffer.rightLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
+				led_index += HW_RING_SIZE[ring];
 			}
 		}
 
@@ -91,9 +91,9 @@ class Cycle : public Animation
 				animationCycle[mNext]->Loop(&mFadeBuffer);
 
 				// Sweep from left to right within ANIMATION_FADE_DURATION
-				EVERY_N_MILLISECONDS(ANIMATION_FADE_DURATION_MS / (hw::vCols*2)) {
+				EVERY_N_MILLISECONDS(ANIMATION_FADE_DURATION_MS / (HW_VIRTUAL_COLS*2)) {
 					mSweepX++;
-					if ( mSweepX >= (hw::vCols*2) ) {
+					if ( mSweepX >= (HW_VIRTUAL_COLS*2) ) {
 						mStartup = false;
 						mInTransition = false;
 						mCurrent = mNext;
@@ -101,9 +101,9 @@ class Cycle : public Animation
 				}
 
 				// Sweep the left ear...
-				if ( mSweepX < hw::vCols ) {
+				if ( mSweepX < HW_VIRTUAL_COLS ) {
 					for ( uint8_t i = 0; i < data->leftLeds->size(); i++ ) {
-						if ( hw::vCoordsX[i] < mSweepX ) {
+						if ( HW_V_COORDS_X[i] < mSweepX ) {
 							(*data->leftLeds)[i] = CRGB((*mFadeBuffer.leftLeds)[i]);
 						}
 					}
@@ -111,14 +111,14 @@ class Cycle : public Animation
 				} else {
 					(*data->leftLeds) = (*mFadeBuffer.leftLeds);
 					for ( uint8_t i = 0; i < data->rightLeds->size(); i++ ) {
-						if ( hw::vCoordsX[i] < mSweepX - hw::vCols ) {
+						if ( HW_V_COORDS_X[i] < mSweepX - HW_VIRTUAL_COLS ) {
 							(*data->rightLeds)[i] = CRGB((*mFadeBuffer.rightLeds)[i]);
 						}
 					}
 				}
 
 				// Overlay the transition line and sparkles
-				for ( int y = 0; y < hw::vRows; y++ ) {
+				for ( int y = 0; y < HW_VIRTUAL_ROWS; y++ ) {
 					setWidePixelXY(data, mSweepX, y, CHSV(Gold_h.h,255,192));
 					if ( mSweepX > 0 && random(5) == 1 ) {
 						setWidePixelXY(data, mSweepX-1, y, CHSV(0,0,192));

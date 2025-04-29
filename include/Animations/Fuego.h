@@ -39,10 +39,10 @@ class Fuego : public Animation
 
 			// calculate the noise data
 			uint8_t layer = 0;
-			for (uint8_t i = 0; i < hw::vCols; i++) {
-				uint32_t ioffset = scale_x[layer] * (i - (hw::vCols/2)-1);
-				for (uint8_t j = 0; j < hw::vRows; j++) {
-					uint32_t joffset = scale_y[layer] * (j - (hw::vRows/2)-1);
+			for (uint8_t i = 0; i < HW_VIRTUAL_COLS; i++) {
+				uint32_t ioffset = scale_x[layer] * (i - (HW_VIRTUAL_COLS/2)-1);
+				for (uint8_t j = 0; j < HW_VIRTUAL_ROWS; j++) {
+					uint32_t joffset = scale_y[layer] * (j - (HW_VIRTUAL_ROWS/2)-1);
 					uint16_t data = ((inoise16(x[layer] + ioffset, y[layer] + joffset, z[layer])) + 1);
 					noise[layer][i][j] = data >> 8;
 				}
@@ -58,30 +58,30 @@ class Fuego : public Animation
 
 			//calculate the noise data
 			layer = 1;
-			for (uint8_t i = 0; i < hw::vCols; i++) {
-				uint32_t ioffset = scale_x[layer] * (i - (hw::vCols/2)-1);
-				for (uint8_t j = 0; j < hw::vRows; j++) {
-					uint32_t joffset = scale_y[layer] * (j - (hw::vRows/2)-1);
+			for (uint8_t i = 0; i < HW_VIRTUAL_COLS; i++) {
+				uint32_t ioffset = scale_x[layer] * (i - (HW_VIRTUAL_COLS/2)-1);
+				for (uint8_t j = 0; j < HW_VIRTUAL_ROWS; j++) {
+					uint32_t joffset = scale_y[layer] * (j - (HW_VIRTUAL_ROWS/2)-1);
 					uint16_t data = ((inoise16(x[layer] + ioffset, y[layer] + joffset, z[layer])) + 1);
 					noise[layer][i][j] = data >> 8;
 				}
 			}
 
 			// draw lowest line - seed the fire
-			for (uint8_t x = 0; x < hw::vCols; x++) {
-				heat[XY(x, hw::vRows-1)] =  noise[0][hw::vRows-1][7];
+			for (uint8_t x = 0; x < HW_VIRTUAL_COLS; x++) {
+				heat[XY(x, HW_VIRTUAL_ROWS-1)] =  noise[0][HW_VIRTUAL_ROWS-1][7];
 			}
 
 			//copy everything one line up
-			for (uint8_t y = 0; y < hw::vRows - 1; y++) {
-				for (uint8_t x = 0; x < hw::vCols; x++) {
+			for (uint8_t y = 0; y < HW_VIRTUAL_ROWS - 1; y++) {
+				for (uint8_t x = 0; x < HW_VIRTUAL_COLS; x++) {
 					heat[XY(x, y)] = heat[XY(x, y + 1)];
 				}
 			}
 
 			//dim
-			for (uint8_t y = 0; y < hw::vRows - 1; y++) {
-				for (uint8_t x = 0; x < hw::vCols; x++) {
+			for (uint8_t y = 0; y < HW_VIRTUAL_ROWS - 1; y++) {
+				for (uint8_t x = 0; x < HW_VIRTUAL_COLS; x++) {
 					uint8_t dim = noise[0][x][y];
 			 		// high value = high flames
 					//dim = dim / 1.7;
@@ -91,8 +91,8 @@ class Fuego : public Animation
 				}
 			}
 
-			for (uint8_t y = 0; y < hw::vRows; y++) {
-				for (uint8_t x = 0; x < hw::vCols; x++) {
+			for (uint8_t y = 0; y < HW_VIRTUAL_ROWS; y++) {
+				for (uint8_t x = 0; x < HW_VIRTUAL_COLS; x++) {
 					// map the colors based on heatmap
 					buf[XY(x,y)] = mColor;
 					buf[XY(x,y)].nscale8(heat[XY(x,y)]);
@@ -121,10 +121,10 @@ class Fuego : public Animation
 		uint32_t scale_x[numLayers];
 		uint32_t scale_y[numLayers];
 
-		uint8_t noise[numLayers][hw::vCols][hw::vRows];
-		uint8_t noise2[numLayers][hw::vCols][hw::vRows];
+		uint8_t noise[numLayers][HW_VIRTUAL_COLS][HW_VIRTUAL_ROWS];
+		uint8_t noise2[numLayers][HW_VIRTUAL_COLS][HW_VIRTUAL_ROWS];
 
-		CRGB buf[hw::vCols*hw::vRows];
-		uint8_t heat[hw::vCols*hw::vRows];
+		CRGB buf[HW_VIRTUAL_COLS*HW_VIRTUAL_ROWS];
+		uint8_t heat[HW_VIRTUAL_COLS*HW_VIRTUAL_ROWS];
 
 };
