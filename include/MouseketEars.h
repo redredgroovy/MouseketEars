@@ -7,6 +7,18 @@
 
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
 
+#define DEBUG 1
+
+#ifdef DEBUG
+	#define DPRINT(...) Serial.print(__VA_ARGS__)
+	#define DPRINTF(...) Serial.printf(__VA_ARGS__)
+	#define DPRINTLN(...) Serial.println(__VA_ARGS__)
+#else
+	#define DPRINT(...)
+	#define DPRINTF(...)
+	#define DPRINTLN(...)
+#endif
+
 typedef struct {
 	CRGB *rawLeftLeds;
 	CRGBSet *leftLeds;
@@ -22,7 +34,7 @@ class Animation {
 	public:
 		Animation(uint8_t fadeScale=0) :
 			mFadeScale(fadeScale)
-		{ 
+		{
 		};
 
 		virtual void Setup() = 0;

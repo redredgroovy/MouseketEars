@@ -5,8 +5,6 @@
 #include <RunningMedian.h>
 
 #include "MouseketEars.h"
-
-#include "MouseketEars.h"
 #include "Animations/Acid.h"
 #include "Animations/Charge.h"
 #include "Animations/Cycle.h"
@@ -14,8 +12,6 @@
 #include "Animations/Hypno.h"
 #include "Animations/Sparkle.h"
 #include "Animations/TwinkleFOX.h"
-
-#define DEBUG 1
 
 #define LEFT_EAR_PIN D5
 #define RIGHT_EAR_PIN D4
@@ -28,11 +24,6 @@
 #define PIXEL_ORDER GRB
 #define MAX_POWER_IN_MW 1000
 #define MAX_BRIGHTNESS 32
-
-#ifdef DEBUG
-	#undef VOLTAGE_CUTOFF
-	#define VOLTAGE_CUTOFF 0
-#endif
 
 LedData gLeds;
 
@@ -82,10 +73,7 @@ void voltageCutoff()
 	if ( gVoltageSamples.getMedian() >= VOLTAGE_CUTOFF ) {
 		return;
 	}
-
-	#ifdef DEBUG
-	Serial.println("Triggered voltage cutoff");
-	#endif 
+	DPRINTLN("Triggered voltage cutoff");
 
 	FastLED.clear();
 	FastLED.show();
@@ -170,10 +158,8 @@ void loop()
 	gAnimations[gCurrentAnimation]->Loop(&gLeds);
 	FastLED.show();
 
-	#ifdef DEBUG                                             
 	EVERY_N_MILLISECONDS(1000) {
-		Serial.printf("FPS: %d\n", FastLED.getFPS());
-		Serial.printf("a:%0.3f m:%0.3f %d%%\n", gVoltageSamples.getAverage(), gVoltageSamples.getMedian(), currentChargePct(gVoltageSamples.getMedian()));
+		DPRINTF("FPS: %d\n", FastLED.getFPS());
+		DPRINTF("a:%0.3f m:%0.3f %d%%\n", gVoltageSamples.getAverage(), gVoltageSamples.getMedian(), currentChargePct(gVoltageSamples.getMedian()));
 	}
-	#endif
 }
