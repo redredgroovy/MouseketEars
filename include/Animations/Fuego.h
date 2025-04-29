@@ -1,30 +1,30 @@
 #pragma once
 
-#include "Animation.h"
+#include "MouseketEars.h"
 
 class Fuego : public Animation
 {
-    public:
-        
-        Fuego(const CHSV color = FireOrange_h) :
-            Animation(),
-            mColor(color)
-        {
-        }
+	public:
+		
+		Fuego(const CHSV color = FireOrange_h) :
+			Animation(),
+			mColor(color)
+		{
+		}
 
 		Fuego(const CHSV color, const uint8_t fadeScale) :
-            Animation(fadeScale),
-            mColor(color)
-        {
-        }
+			Animation(fadeScale),
+			mColor(color)
+		{
+		}
 
-        void Setup()
-        {
-        }
+		void Setup()
+		{
+		}
 
-        void Loop(LedData *data)
-        {
-            // some changing values
+		void Loop(LedData *data)
+		{
+			// some changing values
 		  	uint16_t ctrl1 = inoise16(11 * millis(), 0, 0);
 		  	uint16_t ctrl2 = inoise16(13 * millis(), 100000, 100000);
 		  	uint16_t  ctrl = ((ctrl1 + ctrl2) / 2);
@@ -39,10 +39,10 @@ class Fuego : public Animation
 
 			// calculate the noise data
 			uint8_t layer = 0;
-			for (uint8_t i = 0; i < VIRTUAL_EAR_COLS; i++) {
-				uint32_t ioffset = scale_x[layer] * (i - (VIRTUAL_EAR_COLS/2)-1);
-				for (uint8_t j = 0; j < VIRTUAL_EAR_ROWS; j++) {
-					uint32_t joffset = scale_y[layer] * (j - (VIRTUAL_EAR_ROWS/2)-1);
+			for (uint8_t i = 0; i < hw::vCols; i++) {
+				uint32_t ioffset = scale_x[layer] * (i - (hw::vCols/2)-1);
+				for (uint8_t j = 0; j < hw::vRows; j++) {
+					uint32_t joffset = scale_y[layer] * (j - (hw::vRows/2)-1);
 					uint16_t data = ((inoise16(x[layer] + ioffset, y[layer] + joffset, z[layer])) + 1);
 					noise[layer][i][j] = data >> 8;
 				}
@@ -58,30 +58,30 @@ class Fuego : public Animation
 
 			//calculate the noise data
 			layer = 1;
-			for (uint8_t i = 0; i < VIRTUAL_EAR_COLS; i++) {
-				uint32_t ioffset = scale_x[layer] * (i - (VIRTUAL_EAR_COLS/2)-1);
-				for (uint8_t j = 0; j < VIRTUAL_EAR_ROWS; j++) {
-					uint32_t joffset = scale_y[layer] * (j - (VIRTUAL_EAR_ROWS/2)-1);
+			for (uint8_t i = 0; i < hw::vCols; i++) {
+				uint32_t ioffset = scale_x[layer] * (i - (hw::vCols/2)-1);
+				for (uint8_t j = 0; j < hw::vRows; j++) {
+					uint32_t joffset = scale_y[layer] * (j - (hw::vRows/2)-1);
 					uint16_t data = ((inoise16(x[layer] + ioffset, y[layer] + joffset, z[layer])) + 1);
 					noise[layer][i][j] = data >> 8;
 				}
 			}
 
 			// draw lowest line - seed the fire
-			for (uint8_t x = 0; x < VIRTUAL_EAR_COLS; x++) {
-				heat[XY(x, VIRTUAL_EAR_ROWS-1)] =  noise[0][VIRTUAL_EAR_ROWS-1][7];
+			for (uint8_t x = 0; x < hw::vCols; x++) {
+				heat[XY(x, hw::vRows-1)] =  noise[0][hw::vRows-1][7];
 			}
 
 			//copy everything one line up
-			for (uint8_t y = 0; y < VIRTUAL_EAR_ROWS - 1; y++) {
-				for (uint8_t x = 0; x < VIRTUAL_EAR_COLS; x++) {
+			for (uint8_t y = 0; y < hw::vRows - 1; y++) {
+				for (uint8_t x = 0; x < hw::vCols; x++) {
 					heat[XY(x, y)] = heat[XY(x, y + 1)];
 				}
 			}
 
 			//dim
-			for (uint8_t y = 0; y < VIRTUAL_EAR_ROWS - 1; y++) {
-				for (uint8_t x = 0; x < VIRTUAL_EAR_COLS; x++) {
+			for (uint8_t y = 0; y < hw::vRows - 1; y++) {
+				for (uint8_t x = 0; x < hw::vCols; x++) {
 					uint8_t dim = noise[0][x][y];
 			 		// high value = high flames
 					//dim = dim / 1.7;
@@ -91,16 +91,16 @@ class Fuego : public Animation
 				}
 			}
 
-			for (uint8_t y = 0; y < VIRTUAL_EAR_ROWS; y++) {
-				for (uint8_t x = 0; x < VIRTUAL_EAR_COLS; x++) {
+			for (uint8_t y = 0; y < hw::vRows; y++) {
+				for (uint8_t x = 0; x < hw::vCols; x++) {
 					// map the colors based on heatmap
-                    buf[XY(x,y)] = mColor;
-                    buf[XY(x,y)].nscale8(heat[XY(x,y)]);
+					buf[XY(x,y)] = mColor;
+					buf[XY(x,y)].nscale8(heat[XY(x,y)]);
 
 					// dim the result based on 2nd noise layer
 					buf[XY(x, y)].nscale8(noise[1][x][y]);
-                    setPixelXY(data->leftLeds, x, y, buf[XY(x,y)]);
-                    setPixelXY(data->rightLeds, x, y, buf[XY(x,y)]);
+					setPixelXY(data->leftLeds, x, y, buf[XY(x,y)]);
+					setPixelXY(data->rightLeds, x, y, buf[XY(x,y)]);
 				}
 		 	}
 
@@ -110,11 +110,10 @@ class Fuego : public Animation
 			}
 		}
 
+	protected:
+		const CHSV mColor;
 
-    protected:
-        const CHSV mColor;
-
-        // parameters and buffer for the noise array
+		// parameters and buffer for the noise array
 		static const uint8_t numLayers = 2;
 		uint32_t x[numLayers];
 		uint32_t y[numLayers];
@@ -122,10 +121,10 @@ class Fuego : public Animation
 		uint32_t scale_x[numLayers];
 		uint32_t scale_y[numLayers];
 
-		uint8_t noise[numLayers][VIRTUAL_EAR_COLS][VIRTUAL_EAR_ROWS];
-		uint8_t noise2[numLayers][VIRTUAL_EAR_COLS][VIRTUAL_EAR_ROWS];
+		uint8_t noise[numLayers][hw::vCols][hw::vRows];
+		uint8_t noise2[numLayers][hw::vCols][hw::vRows];
 
-		CRGB buf[VIRTUAL_EAR_COLS*VIRTUAL_EAR_ROWS];
-        uint8_t heat[VIRTUAL_EAR_COLS*VIRTUAL_EAR_ROWS];
+		CRGB buf[hw::vCols*hw::vRows];
+		uint8_t heat[hw::vCols*hw::vRows];
 
 };
