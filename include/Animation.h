@@ -1,5 +1,4 @@
-#ifndef Animation_h
-#define Animation_h
+#pragma once
 
 #include <FastLED.h>
 #include "MouseketEars.h"
@@ -24,5 +23,3 @@ class Animation {
 
         const uint8_t mFadeScale;
 };
-
-#endif

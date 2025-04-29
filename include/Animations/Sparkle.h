@@ -1,7 +1,6 @@
-#include "Animation.h"
+#pragma once
 
-#ifndef Sparkle_h
-#define Sparkle_h
+#include "Animation.h"
 
 class Sparkle : public Animation
 {
@@ -52,5 +51,3 @@ class Sparkle : public Animation
         const CHSV mColor;
 
 };
-
-#endif

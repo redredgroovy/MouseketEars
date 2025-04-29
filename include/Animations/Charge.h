@@ -1,8 +1,7 @@
+#pragma once
+
 #include "Animation.h"
 #include <RunningMedian.h>
-
-#ifndef Charge_h
-#define Charge_h
 
 extern RunningMedian gVoltageSamples;
 extern uint8_t currentChargePct(float voltage);
@@ -32,5 +31,3 @@ class Charge : public Animation
         }
 
 };
-
-#endif

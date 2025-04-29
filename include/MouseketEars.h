@@ -1,5 +1,4 @@
-#ifndef MouseketEars_h
-#define MouseketEars_h
+#pragma once
 
 #include <FastLED.h>
 
@@ -153,5 +152,3 @@ const TProgmemRGBPalette16 BlueWhite_p FL_PROGMEM = {
    CRGB::Blue, CRGB::Blue, CRGB::Blue, CRGB::Blue, 
    CRGB::Blue, CRGB::Gray, CRGB::Gray, CRGB::Gray
 };
-
-#endif

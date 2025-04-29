@@ -1,7 +1,6 @@
-#include "Animation.h"
+#pragma once
 
-#ifndef Hypno_h
-#define Hypno_h
+#include "Animation.h"
 
 class Hypno : public Animation
 {
@@ -38,5 +37,3 @@ class Hypno : public Animation
         const uint8_t mBpm = 20;
 
 };
-
-#endif

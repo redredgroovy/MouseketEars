@@ -1,7 +1,6 @@
-#include "Animation.h"
+#pragma once
 
-#ifndef Cycle_h
-#define Cycle_h
+#include "Animation.h"
 
 #include "Animations/Acid.h"
 #include "Animations/Fuego.h"
@@ -143,5 +142,3 @@ class Cycle : public Animation
         unsigned long mFadeTimer = 0;
 
 };
-
-#endif

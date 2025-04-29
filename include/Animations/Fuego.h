@@ -1,7 +1,6 @@
-#include "Animation.h"
+#pragma once
 
-#ifndef Fuego_h
-#define Fuego_h
+#include "Animation.h"
 
 class Fuego : public Animation
 {
@@ -130,5 +129,3 @@ class Fuego : public Animation
         uint8_t heat[VIRTUAL_EAR_COLS*VIRTUAL_EAR_ROWS];
 
 };
-
-#endif

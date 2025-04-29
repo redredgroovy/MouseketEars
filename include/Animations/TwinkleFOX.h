@@ -1,7 +1,6 @@
-#include "Animation.h"
+#pragma once
 
-#ifndef TwinkleFOX_h
-#define TwinkleFOX_h
+#include "Animation.h"
 
 #define AUTO_SELECT_BACKGROUND_COLOR 0
 #define COOL_LIKE_INCANDESCENT 1
@@ -150,5 +149,3 @@ class TwinkleFOX : public Animation
         CRGBPalette16 mCurrentPalette;
 
 };
-
-#endif

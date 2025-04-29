@@ -1,7 +1,6 @@
-#include "Animation.h"
+#pragma once
 
-#ifndef Acid_h
-#define Acid_h
+#include "Animation.h"
 
 class Acid : public Animation
 {
@@ -136,5 +135,3 @@ class Acid : public Animation
 		uint8_t noisesmoothing;
 
 };
-
-#endif
