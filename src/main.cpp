@@ -13,20 +13,11 @@
 #include "Animations/Sparkle.h"
 #include "Animations/TwinkleFOX.h"
 
-#define LEFT_EAR_PIN D5
-#define RIGHT_EAR_PIN D4
-#define BUTTON_PIN D7
-#define VOLTAGE_PIN A0
-
-#define VOLTAGE_CUTOFF 3.5
-
-#define CHIPSET WS2812B
-#define PIXEL_ORDER GRB
-#define MAX_POWER_IN_MW 1000
-#define MAX_BRIGHTNESS 32
-
 LedData gLeds;
+ezButton gButton(HW_BUTTON_PIN);
+RunningMedian gVoltageSamples = RunningMedian(16);
 
+// This is an array of all the animations to be available on controller
 Animation* gAnimations[] = {
 	new Cycle(),
 
@@ -38,9 +29,9 @@ Animation* gAnimations[] = {
 	new Fuego(PoisonGreen_h),
 	new Fuego(IceBlue_h),
 
-	new Sparkle(false, Gold_h),
-	new Sparkle(false, CHSV(0,0,255)),
-	new Sparkle(true),
+	new Sparkle(Gold_h),
+	new Sparkle(CHSV(0,0,255)),
+	new Sparkle(),
 	
 	new TwinkleFOX(FairyLight_p, 128),
 	new TwinkleFOX(Ice_p),
@@ -53,33 +44,40 @@ Animation* gAnimations[] = {
 };
 uint8_t gCurrentAnimation = 0;
 
-ezButton gButton(HW_BUTTON_PIN);
-
-RunningMedian gVoltageSamples = RunningMedian(16);
-
+/*
+ * Calculate the current charge percentage based on battery voltage using
+ * a rough approximation of the discharge curve for a LiPo cell.
+ */
 uint8_t currentChargePct(float voltage)
 {
 	// Cutoff at 3.5 volts - we're likely under 5% capacity anyway.
 	if ( voltage < 3.5 ) { return 0; }
 	else if ( voltage > 4.2 ) { return 100; }
 
-	// Approximation of discharge curve from 4.2  -> 3.5 volts
+	// Approximation of discharge curve from 4.2 -> 3.5 volts
 	return (uint8_t)(123 - (123 / (pow(1 + pow((voltage/3.7), 80), 0.165))));
 }
 
-// Once we enter voltageCutoff, we stay here for safety until the controller is reset
-void voltageCutoff()
+/*
+ * Check the battery voltage and enter a safety cutoff if it is too low.
+ * It will flash a red LED to indicate low voltage and turn off all other LEDs.
+ * The controller will stay in this state until it is reset.
+ */
+void checkVoltageCutoff(void)
 {
 	if ( gVoltageSamples.getMedian() >= HW_VOLTAGE_CUTOFF ) {
 		return;
 	}
+
+	// Once we enter voltageCutoff, we stay here for safety until the controller is reset
 	DPRINTLN("Triggered voltage cutoff");
 
+	// Turn off all LEDs to conserve power
 	FastLED.clear();
 	FastLED.show();
 
+	// Flash a dim red LED to indicate low voltage
 	bool ledState = false;
-
 	while ( true ) {
 		delay(1000);
 		ledState = !ledState;
@@ -88,7 +86,11 @@ void voltageCutoff()
 	}
 }
 
-void setup()
+/*
+ * Setup the controller and initialize the FastLED library.
+ * This function is called once at startup.
+ */
+void setup(void)
 {
 	Serial.begin(115200);
 	while (!Serial && millis() < 2000);
@@ -101,7 +103,7 @@ void setup()
 	FastLED.setMaxPowerInMilliWatts(HW_MAX_POWER_IN_MW);
 	FastLED.setBrightness(HW_MAX_BRIGHTNESS);
 
-	// Initialize the FastLED pixel data
+	// Initialize the FastLED pixel data structures
 	gLeds.rawLeftLeds = (CRGB*)malloc(sizeof(CRGB) * HW_LEDS_PER_EAR);
 	gLeds.leftLeds = new CRGBSet(gLeds.rawLeftLeds, HW_LEDS_PER_EAR);
 	gLeds.rawRightLeds = (CRGB*)malloc(sizeof(CRGB) * HW_LEDS_PER_EAR);
@@ -119,32 +121,38 @@ void setup()
 		led_index += HW_RING_SIZE[ring];
 	}
 
+	// Initialize the FastLED buffers
 	FastLED.addLeds<HW_CHIPSET, HW_LEFT_EAR_PIN, HW_PIXEL_ORDER>(gLeds.rawLeftLeds, HW_LEDS_PER_EAR);
 	FastLED.addLeds<HW_CHIPSET, HW_RIGHT_EAR_PIN, HW_PIXEL_ORDER>(gLeds.rawRightLeds, HW_LEDS_PER_EAR);
-
 	FastLED.clear();
 	FastLED.show();
 
+	// Initialize the interactive button
 	gButton.setDebounceTime(50);
 
 	// Prime the voltage monitor and immediately enter the safety cuffoff if we are low volage
 	pinMode(HW_VOLTAGE_PIN, INPUT);
-	for( uint8_t i = 0; i < 16; i++) {
+	for( uint8_t i = 0; i < gVoltageSamples.getSize(); i++) {
 		float reading = 2 * analogReadMilliVolts(HW_VOLTAGE_PIN) / 1000.0; // analog attenuation ratio 1/2, mV --> V
 		gVoltageSamples.add(reading); 
 	}
-	voltageCutoff();
+	checkVoltageCutoff();
 
+	// Prepare the current animation to run
 	gAnimations[gCurrentAnimation]->Setup();
 }
 
-void loop()
+/*
+ * Main loop of the program. This function is called repeatedly after setup() has completed.
+ * It handles sampling the battery voltage, checking for button presses, and rendering the current animation.
+ */
+void loop(void)
 {
 	// Sample the battery voltage every second and enter the safety cutoff if we are low voltage
 	EVERY_N_SECONDS(1) {
 		float reading = 2 * analogReadMilliVolts(HW_VOLTAGE_PIN) / 1000.0; // analog attenuation ratio 1/2, mV --> V
 		gVoltageSamples.add(reading);
-		voltageCutoff();
+		checkVoltageCutoff();
 	}
 
 	// Use the button to trigger animation rotation
@@ -158,8 +166,14 @@ void loop()
 	gAnimations[gCurrentAnimation]->Loop(&gLeds);
 	FastLED.show();
 
-	EVERY_N_MILLISECONDS(1000) {
-		DPRINTF("FPS: %d\n", FastLED.getFPS());
-		DPRINTF("a:%0.3f m:%0.3f %d%%\n", gVoltageSamples.getAverage(), gVoltageSamples.getMedian(), currentChargePct(gVoltageSamples.getMedian()));
+	EVERY_N_SECONDS(5) {
+		uint32_t seconds = millis() / 1000;
+		uint32_t minutes = seconds / 60;
+		uint32_t hours = minutes / 60;
+		seconds = seconds % 60;
+		minutes = minutes % 60;
+
+		//DPRINTF("FPS: %d\n", FastLED.getFPS());
+		DPRINTF("[%2d:%02d:%02d] %0.3fV (%d%%)\n", hours, minutes, seconds, gVoltageSamples.getMedian(), currentChargePct(gVoltageSamples.getMedian()));
 	}
 }
