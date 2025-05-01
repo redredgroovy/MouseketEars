@@ -5,7 +5,6 @@
 class Hypno : public Animation
 {
 	public:
-		
 		Hypno() : Animation()
 		{
 		}
@@ -13,11 +12,7 @@ class Hypno : public Animation
 		Hypno(uint8_t fadeScale) : Animation(fadeScale)
 		{
 		}
-
-		void Setup()
-		{
-		}
-
+	
 		void Loop(LedData *data)
 		{
 			uint8_t thisHue = beat8(mBpm, 255);

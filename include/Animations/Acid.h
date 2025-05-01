@@ -5,7 +5,6 @@
 class Acid : public Animation
 {
 	public:
-		
 		Acid(CRGBPalette16 palette = PoisonGreen_p) :
 			Animation(),
 			mCurrentPalette(palette)
@@ -118,7 +117,6 @@ class Acid : public Animation
 		}
 
 	protected:
-
 		static const uint8_t NUM_LAYERS = 3;
 
 		uint32_t x[NUM_LAYERS];

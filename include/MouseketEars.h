@@ -35,9 +35,12 @@ class Animation {
 		Animation(uint8_t fadeScale=0) :
 			mFadeScale(fadeScale)
 		{
-		};
+		}
 
-		virtual void Setup() = 0;
+		virtual void Setup()
+		{
+		}
+
 		virtual void Loop(LedData *data) = 0;
 
 		const uint8_t mFadeScale;
@@ -62,9 +65,6 @@ void setPixelXY(CRGBSet *leds, uint8_t x, uint8_t y, CRGB color)
 
 void setWidePixelXY(LedData *data, uint8_t x, uint8_t y, CRGB color)
 {
-	if ( x<0 || y<0 || x>=(HW_VIRTUAL_COLS*2) || y>=HW_VIRTUAL_ROWS )
-		return;
-		
 	if ( x < HW_VIRTUAL_COLS ) {
 		setPixelXY(data->leftLeds, x, y, color);
 	} else {

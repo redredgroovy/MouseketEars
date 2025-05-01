@@ -9,12 +9,7 @@ extern uint8_t currentChargePct(float voltage);
 class Charge : public Animation
 {
 	public:
-
 		Charge() : Animation()
-		{
-		}
-
-		void Setup()
 		{
 		}
 

@@ -8,7 +8,6 @@
 class TwinkleFOX : public Animation
 {
 	public:
-		
 		TwinkleFOX(CRGBPalette16 palette = PartyColors_p) :
 			Animation(),
 			mCurrentPalette(palette)
@@ -18,10 +17,6 @@ class TwinkleFOX : public Animation
 		TwinkleFOX(CRGBPalette16 palette, const uint8_t fadeScale) :
 			Animation(fadeScale),
 			mCurrentPalette(palette)
-		{
-		}
-
-		void Setup()
 		{
 		}
 
