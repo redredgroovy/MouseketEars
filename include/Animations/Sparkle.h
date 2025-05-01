@@ -5,10 +5,12 @@
 class Sparkle : public Animation
 {
 	public:
-		
-		Sparkle(const bool rainbow, const CHSV color = CHSV(0,0,255)) :
+		Sparkle() : Animation()
+		{
+		}
+
+		Sparkle(const CHSV color) :
 			Animation(),
-			mRainbow(rainbow),
 			mColor(color)
 		{
 		}
@@ -21,17 +23,18 @@ class Sparkle : public Animation
 
 		void Loop(LedData *data)
 		{
-			unsigned long now = millis();
+			uint32_t now = millis();
 
 			if ( now - mSpawnTimer > 20 ) {
 				CHSV color;
 				mSpawnTimer = now;
 
-				color = ( mRainbow ? CHSV(random(0,255), 255, 255) : mColor );
+				// Default to random rainbow colors if mColor is undefined
+				color = ( mColor == 0 ? CHSV(random(0,255), 255, 255) : mColor );
 				color.v = scale8_video(color.v, 192);
 				(*data->leftLeds)[random(0, data->leftLeds->size())] = color;
 				
-				color = ( mRainbow ? CHSV(random(0,255), 255, 255) : mColor );
+				color = ( mColor == 0 ? CHSV(random(0,255), 255, 255) : mColor );
 				color.v = scale8_video(color.v, 192);
 				(*data->rightLeds)[random(0, data->rightLeds->size())] = color;
 			}
@@ -47,7 +50,6 @@ class Sparkle : public Animation
 		unsigned long mSpawnTimer = 0;
 		unsigned long mFadeTimer = 0;
 
-		const bool mRainbow;
 		const CHSV mColor;
 
 };
