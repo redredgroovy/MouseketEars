@@ -17,7 +17,8 @@ LedData gLeds;
 ezButton gButton(HW_BUTTON_PIN);
 RunningMedian gVoltageSamples = RunningMedian(16);
 
-// This is an array of all the animations to be available on controller
+// Array of all available animations
+// This is used to cycle through the animations in order
 Animation* gAnimations[] = {
 	new Cycle(),
 
@@ -116,8 +117,6 @@ void setup(void)
 	for( uint8_t ring = 0; ring < HW_NUM_RINGS; ring++ ) {
 		gLeds.leftRings[ring] = new CRGBSet(*(gLeds.leftLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
 		gLeds.rightRings[ring] = new CRGBSet(*(gLeds.rightLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
-		//gFadeBuffer.leftRings[ring] = new CRGBSet(*(gFadeBuffer.leftLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
-		//gFadeBuffer.rightRings[ring] = new CRGBSet(*(gFadeBuffer.rightLeds), led_index, led_index+HW_RING_SIZE[ring]-1);
 		led_index += HW_RING_SIZE[ring];
 	}
 

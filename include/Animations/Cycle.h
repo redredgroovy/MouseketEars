@@ -113,7 +113,7 @@ class Cycle : public Animation
 					mInTransition = false;
 					mCurrent = mNext;
 				}
-				int16_t sweepX = scale8(HW_VIRTUAL_COLS*2, (uint8_t)progress); // 0-32
+				int16_t sweepX = scale8(HW_VIRTUAL_COLS*2, (uint8_t)progress); // 0-HW_VIRTUAL_COLS*2
 
 				if ( mSweepDir == SweepDirection::SWEEP_LEFT_TO_RIGHT ) {
 					// Sweep the left ear...
@@ -182,12 +182,10 @@ class Cycle : public Animation
 			SWEEP_DOWN = 3,
 		};
 
-		int16_t mSweepX = 0;
 		SweepDirection mSweepDir = SWEEP_RIGHT_TO_LEFT;
 
 		LedData mFadeBuffer;
 		uint32_t mFadeInterval = 0;
 		uint32_t mFadeStart = 0;
-
 
 };
